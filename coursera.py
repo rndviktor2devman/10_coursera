@@ -19,7 +19,7 @@ def get_course_info(course_slug):
     try:
         r = requests.get(course_slug)
     except requests.exceptions.ConnectionError:
-        return get_course_info(course_slug)
+        return None
     soup = BS(r.content, "lxml")
     try:
         course_data['title'] = soup.find('div', "title display-3-text").string
