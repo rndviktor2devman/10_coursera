@@ -9,12 +9,9 @@ from openpyxl import Workbook
 def get_courses_list(output_length):
     url = "https://www.coursera.org/sitemap~www~courses.xml"
     tree_root = ETree.fromstring(requests.get(url).content)
-    xml_courses = [child[0].text for child in tree_root]
-
-    links_list = []
-    for course in random.sample(xml_courses, output_length):
-        links_list.append(course)
-    return links_list
+    list_urls = [child[0].text for child in tree_root]
+    random.shuffle(list_urls)
+    return list_urls[:output_length]
 
 
 def get_course_info(course_slug):
