@@ -6,47 +6,34 @@ from bs4 import BeautifulSoup as BS
 from openpyxl import Workbook
 
 
-def get_courses_list(output_length):
+def get_courses_list():
     url = "https://www.coursera.org/sitemap~www~courses.xml"
     tree_root = ETree.fromstring(requests.get(url).content)
     list_urls = [child[0].text for child in tree_root]
     random.shuffle(list_urls)
-    return list_urls[:output_length]
+    return list_urls
 
 
 def get_course_info(course_slug):
     course_data = {}
     try:
         r = requests.get(course_slug)
-    except requests.exceptions.ConnectionError:
-        return None
-    soup = BS(r.content, "lxml")
-    try:
+        soup = BS(r.content, "lxml")
         course_data['title'] = soup.find('div', "title display-3-text").string
-    except AttributeError:
-        course_data['title'] = ''
-    try:
         for span in soup.find_all('div', "ratings-text bt3-hidden-xs")[0]:
             if isinstance(span, str) and span.startswith("Average"):
                 course_data['rating'] = span.replace("Average User Rating ", "")
-    except (IndexError, AttributeError):
-        course_data['rating'] = ''
-    try:
         course_data['weeks'] = soup.find_all(
             'div', "week-heading body-2-text"
         )[-1].string
-    except IndexError:
-        course_data['weeks'] = ''
-    try:
         course_data['date'] = json.loads(
             soup.find('div', "rc-CourseGoogleSchemaMarkup").script.text
         )['hasCourseInstance'][0]['startDate']
         course_data['language'] = json.loads(
             soup.find('div', "rc-CourseGoogleSchemaMarkup").script.text
         )['hasCourseInstance'][0]['inLanguage']
-    except (AttributeError, KeyError):
-        course_data['date'] = ''
-        course_data['language'] = ''
+    except (requests.exceptions.ConnectionError, IndexError, AttributeError, KeyError):
+        return None
 
     course_data['url'] = course_slug
     return course_data
@@ -78,11 +65,16 @@ def output_courses_info_to_xlsx(filepath, data_set):
 
 
 if __name__ == '__main__':
-    list_links = get_courses_list(20)
-    for link in list_links:
-        print(link)
+    length_output_set = 20
+    list_links = get_courses_list()
     file_path = "output.xlsx"
     data_set = []
-    for link in list_links:
-        data_set.append(get_course_info(link))
+    number_link = 0
+    while number_link < len(list_links) and len(data_set) < length_output_set:
+        course_data = get_course_info(list_links[number_link])
+        if course_data is not None:
+            data_set.append(course_data)
+            print(course_data)
+
+        number_link += 1
     output_courses_info_to_xlsx(file_path, data_set)
