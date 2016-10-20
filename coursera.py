@@ -8,14 +8,12 @@ from openpyxl import Workbook
 
 def get_courses_list(output_length):
     url = "https://www.coursera.org/sitemap~www~courses.xml"
-    prefix = '{http://www.sitemaps.org/schemas/sitemap/0.9}'
-    urls_text = requests.get(url).content
-    tree_root = ETree.fromstring(urls_text.decode('utf-8'))
-    xml_courses = tree_root.findall('{}url'.format(prefix))
+    tree_root = ETree.fromstring(requests.get(url).content)
+    xml_courses = [child[0].text for child in tree_root]
 
     links_list = []
     for course in random.sample(xml_courses, output_length):
-        links_list.append(course.find('{}loc'.format(prefix)).text)
+        links_list.append(course)
     return links_list
 
 
@@ -84,6 +82,8 @@ def output_courses_info_to_xlsx(filepath, data_set):
 
 if __name__ == '__main__':
     list_links = get_courses_list(20)
+    for link in list_links:
+        print(link)
     file_path = "output.xlsx"
     data_set = []
     for link in list_links:
