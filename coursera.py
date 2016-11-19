@@ -82,12 +82,9 @@ if __name__ == '__main__':
     list_links = get_courses_list()
     file_path = "output.xlsx"
     data_set = []
-    number_link = 0
-    while number_link < len(list_links) and len(data_set) < output_length:
-        course_data = get_course_info(list_links[number_link])
+    for link in list_links[:output_length]:
+        course_data = get_course_info(link)
         if course_data is not None:
             data_set.append(course_data)
             print(course_data)
-
-        number_link += 1
     output_courses_info_to_xlsx(file_path, data_set)
