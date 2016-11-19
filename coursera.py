@@ -65,12 +65,12 @@ def output_courses_info_to_xlsx(filepath, data_set):
 
 
 if __name__ == '__main__':
-    length_output_set = 20
+    output_length = 20
     list_links = get_courses_list()
     file_path = "output.xlsx"
     data_set = []
     number_link = 0
-    while number_link < len(list_links) and len(data_set) < length_output_set:
+    while number_link < len(list_links) and len(data_set) < output_length:
         course_data = get_course_info(list_links[number_link])
         if course_data is not None:
             data_set.append(course_data)
