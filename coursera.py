@@ -16,24 +16,37 @@ def get_courses_list():
 
 def get_course_info(course_slug):
     course_data = {}
-    try:
-        r = requests.get(course_slug)
-        soup = BS(r.content, "lxml")
-        course_data['title'] = soup.find('div', "title display-3-text").string
-        for span in soup.find_all('div', "ratings-text bt3-hidden-xs")[0]:
-            if isinstance(span, str) and span.startswith("Average"):
-                course_data['rating'] = span.replace("Average User Rating ", "")
-        course_data['weeks'] = soup.find_all(
-            'div', "week-heading body-2-text"
-        )[-1].string
-        course_data['date'] = json.loads(
-            soup.find('div', "rc-CourseGoogleSchemaMarkup").script.text
-        )['hasCourseInstance'][0]['startDate']
-        course_data['language'] = json.loads(
-            soup.find('div', "rc-CourseGoogleSchemaMarkup").script.text
-        )['hasCourseInstance'][0]['inLanguage']
-    except (requests.exceptions.ConnectionError, IndexError, AttributeError, KeyError):
-        return None
+    r = requests.get(course_slug)
+    soup = BS(r.content, "lxml")
+    empty_item = 'not found'
+
+    title_tag = soup.find('div', "title display-3-text")
+    course_data['title'] = empty_item
+    if title_tag is not None:
+        course_data['title'] = title_tag.text
+
+    rating_tag = soup.find('div', {'class': 'ratings-text bt3-visible-xs'})
+    course_data['rating'] = 'not found'
+    if rating_tag is not None:
+        course_data['rating'] = rating_tag.text
+
+    week_tag = soup.find('div', {'class': 'rc-WeekView'})
+    course_data['weeks'] = empty_item
+    if week_tag is not None:
+        course_data['weeks'] = len(
+            week_tag.find_all('div', {'class': 'week'}))
+
+    info_tag = soup.find('script', {'type': 'application/ld+json'})
+    course_data['date'] = empty_item
+    if info_tag is not None:
+        json_info = json.loads(info_tag.text)
+        if 'startDate' in json_info['hasCourseInstance'][0].keys():
+            course_data['date'] = json_info['hasCourseInstance'][0]['startDate']
+
+    language_tag = soup.find('div', {'class': 'language-info'})
+    course_data['language'] = empty_item
+    if language_tag is not None:
+        course_data['language'] = language_tag.text
 
     course_data['url'] = course_slug
     return course_data
